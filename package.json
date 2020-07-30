@@ -1,0 +1,26 @@
+{
+  "name": "morpheus-backend",
+  "version": "1.0.0",
+  "description": "express app for text analyze app",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kolebayev/morpheus-backend.git"
+  },
+  "author": "Ilya Kolebayev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kolebayev/morpheus-backend/issues"
+  },
+  "homepage": "https://github.com/kolebayev/morpheus-backend#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
