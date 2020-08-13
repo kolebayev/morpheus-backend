@@ -1,30 +1,27 @@
+console.clear();
+
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const axios = require("axios");
+const bodyParser = require("body-parser");
+const Az = require("az");
+
 const port = 8000;
 
-const TEXTERRA_API_KEY = "f25971321036fd1cc0fa627954b37af2f6870e95";
-const testString =
-  "Our kids should grow up in an America where opportunity is real.";
-
 app.use(cors());
+app.use(bodyParser.json({ limit: "100mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
 
-app.post("/", (req, res) => {
-  const getT = async () => {
-    try {
-      const postRes = await axios.post(
-        "http://api.ispras.ru/texterra/v1/nlp?targetType=named-entity&apikey=" +
-          TEXTERRA_API_KEY,
-        [{ text: testString }]
-      );
-      console.log(postRes.data);
-      res.send(postRes.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-  getT();
+app.post("/analyze", express.json(), (req, res) => {
+  const data = req.body;
+  console.log(data.messages[0]);
+
+  Az.Morph.init(function () {
+    let data = Az.Morph("ракеты");
+    console.log(data[0].tag);
+  });
+
+  res.send({ lol: "response" });
 });
 
 app.listen(port, () =>
