@@ -16,17 +16,17 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '100mb' }))
 
 app.post('/analyze', express.json(), (req, res) => {
   const data = req.body
-  const { post, NMbr, GNdr, messages } = data
+  const { post, NMbr, GNdr, filteredMessages } = data
   console.log(post, NMbr, GNdr)
-  const startDate = date.parseISO(data.startDate)
-  const endDate = date.parseISO(data.endDate)
+  const startDate = date.parseISO(data.rangeStart)
+  const endDate = date.parseISO(data.rangeEnd)
   let azData = []
-  for (let i = 0; i < messages.length; i++) {
+  for (let i = 0; i < filteredMessages.length; i++) {
     if (
-      (date.parseISO(messages[i].date) > startDate) &
-      (date.parseISO(messages[i].date) < endDate)
+      (date.parseISO(filteredMessages[i].date) > startDate) &
+      (date.parseISO(filteredMessages[i].date) < endDate)
     ) {
-      azData.push(messages[i])
+      azData.push(filteredMessages[i])
     }
   }
 
