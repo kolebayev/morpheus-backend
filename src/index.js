@@ -52,8 +52,8 @@ app.post('/analyze', express.json(), (req, res) => {
   let azData = []
   for (let i = 0; i < clearedMessages.length; i++) {
     if (
-      (date.parseISO(clearedMessages[i].date) > startDate) &
-      (date.parseISO(clearedMessages[i].date) < endDate)
+      (date.parseISO(clearedMessages[i].date) >= startDate) &
+      (date.parseISO(clearedMessages[i].date) <= endDate)
     ) {
       azData.push(clearedMessages[i])
     }
@@ -63,14 +63,24 @@ app.post('/analyze', express.json(), (req, res) => {
 
   Az.Morph.init(() => {
     let words = []
+
+    // выставляет условие проверки в соотвествие с переданными параметрами
+    // если в UI выбрано "не важно" -> у параметра приходит null -> параметр не проверяется
+    let condition = 'arr.includes(post)'
+    ;(NMbr !== null) & (typeof NMbr === 'string') &&
+      (condition = condition + ' & arr2.includes(NMbr)')
+    ;(GNdr !== null) & (typeof GNdr === 'string') &&
+      (condition = condition + ' & arr.includes(GNdr)')
+
     azData.forEach((word, index) => {
       let result = Az.Morph(word.text)
       if (result.length !== 0) {
         let arr = result[0].tag.stat
         let arr2 = result[0].tag.flex
-        if (arr.includes(post) & arr.includes(GNdr) & arr2.includes(NMbr)) {
+        // if (arr.includes(post) & arr.includes(GNdr) & arr2.includes(NMbr)) {
+        if (eval(condition)) {
           words.push({
-            text: word.text,
+            text: word.text.toLowerCase(),
             date: date.format(new Date(word.date), 'dd MMMM yyyy,  HH:mm', {
               locale: locale.ru,
             }),
@@ -79,7 +89,11 @@ app.post('/analyze', express.json(), (req, res) => {
       }
     })
 
-    res.send({ words })
+    res.send(
+      words.length === 0
+        ? { message: 'По указанным параметрам слов не нашлось ¯\\_(ツ)_/¯' }
+        : { words }
+    )
     console.log('————————————————')
   })
 })
