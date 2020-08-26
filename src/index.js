@@ -54,8 +54,9 @@ app.post('/analyze', express.json(), (req, res) => {
 
   Az.Morph.init(() => {
     // добавлет в объект сообщения результаты работы либы
-    let withAnalyzeResult = azData.map((textAndDate) => {
+    let withAnalyzeResult = azData.map((textAndDate, i) => {
       let azResult = Az.Morph(textAndDate.text)
+      // i == 1 && console.log(Az.Morph(textAndDate.text).normalize())
       return {
         ...textAndDate,
         azResult:
