@@ -6,6 +6,7 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 const Az = require('az')
 const date = require('date-fns')
+const ruLocale = require('date-fns/locale/ru')
 
 const port = 8000
 
@@ -53,14 +54,17 @@ app.post('/analyze', express.json(), (req, res) => {
 
   Az.Morph.init(() => {
     // добавлет в объект сообщения результаты работы либы
-    let withAnalyzeResult = azData.map((textAndDate, i) => {
+    let withAnalyzeResult = azData.map((textAndDate) => {
       let azResult = Az.Morph(textAndDate.text)
       return {
+        ...textAndDate,
         azResult:
           azResult.length !== 0
             ? [...azResult[0].tag.stat, ...azResult[0].tag.flex]
             : [],
-        ...textAndDate,
+        date: date.format(new Date(textAndDate.date), 'dd MMMM yyyy,  HH:mm', {
+          locale: ruLocale,
+        }),
       }
     })
 
