@@ -6,7 +6,6 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 const Az = require('az')
 const date = require('date-fns')
-const locale = require('date-fns/locale')
 
 const port = 8000
 
@@ -17,6 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '100mb' }))
 app.post('/analyze', express.json(), (req, res) => {
   const data = req.body
   const { post, NMbr, GNdr, filteredMessages } = data
+  const wordsOptions = [post, NMbr, GNdr]
 
   const startDate = date.parse(data.rangeStart, 'dd/MM/yyyy', new Date())
   const endDate = date.parse(data.rangeEnd, 'dd/MM/yyyy', new Date())
@@ -43,56 +43,38 @@ app.post('/analyze', express.json(), (req, res) => {
     )
   })
 
-  let clearedMessages = messagesOneByOne.filter((item) => {
-    return item.text !== ''
-  })
-
-  // console.log(clearedMessages)
-
-  let azData = []
-  for (let i = 0; i < clearedMessages.length; i++) {
-    if (
-      (date.parseISO(clearedMessages[i].date) >= startDate) &
-      (date.parseISO(clearedMessages[i].date) <= endDate)
-    ) {
-      azData.push(clearedMessages[i])
-    }
-  }
-
-  console.log(azData.length)
+  // убирает пустые сообщения, фильтрует по датам
+  let azData = [...messagesOneByOne]
+    .filter((item) => {
+      return item.text !== ''
+    })
+    .filter((item) => date.parseISO(item.date) >= startDate)
+    .filter((item) => date.parseISO(item.date) <= endDate)
 
   Az.Morph.init(() => {
-    let words = []
-
-    // выставляет условие проверки в соотвествие с переданными параметрами
-    // если в UI выбрано "не важно" -> у параметра приходит null -> параметр не проверяется
-    let condition = 'arr.includes(post)'
-    ;(NMbr !== null) & (typeof NMbr === 'string') &&
-      (condition = condition + ' & arr2.includes(NMbr)')
-    ;(GNdr !== null) & (typeof GNdr === 'string') &&
-      (condition = condition + ' & arr.includes(GNdr)')
-
-    azData.forEach((word, index) => {
-      let result = Az.Morph(word.text)
-      if (result.length !== 0) {
-        let arr = result[0].tag.stat
-        let arr2 = result[0].tag.flex
-        // if (arr.includes(post) & arr.includes(GNdr) & arr2.includes(NMbr)) {
-        if (eval(condition)) {
-          words.push({
-            text: word.text.toLowerCase(),
-            date: date.format(new Date(word.date), 'dd MMMM yyyy,  HH:mm', {
-              locale: locale.ru,
-            }),
-          })
-        }
+    // добавлет в объект сообщения результаты работы либы
+    let withAnalyzeResult = azData.map((textAndDate, i) => {
+      let azResult = Az.Morph(textAndDate.text)
+      return {
+        azResult:
+          azResult.length !== 0
+            ? [...azResult[0].tag.stat, ...azResult[0].tag.flex]
+            : [],
+        ...textAndDate,
       }
     })
 
+    // фильтрует результат по данным запроса
+    wordsOptions.forEach((option) => {
+      withAnalyzeResult = [...withAnalyzeResult].filter((item) =>
+        item.azResult.includes(option)
+      )
+    })
+
     res.send(
-      words.length === 0
+      withAnalyzeResult.length === 0
         ? { message: 'По указанным параметрам слов не нашлось ¯\\_(ツ)_/¯' }
-        : { words }
+        : { words: withAnalyzeResult }
     )
     console.log('————————————————')
   })
