@@ -4,7 +4,7 @@
   "routes": [
     {
       "src": "/analyze",
-      "dest": "src/index.js",
+      "dest": "/src/index.js",
       "methods": ["POST"]
     }
   ]
