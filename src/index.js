@@ -8,7 +8,7 @@ const Az = require('az')
 const date = require('date-fns')
 const ruLocale = require('date-fns/locale/ru')
 
-const port = 8000
+const port = process.env.PORT || '8000'
 
 app.use(cors())
 app.use(bodyParser.json({ limit: '100mb' }))
@@ -53,10 +53,9 @@ app.post('/analyze', express.json(), (req, res) => {
     .filter((item) => date.parseISO(item.date) <= endDate)
 
   Az.Morph.init(() => {
-    // добавлет в объект сообщения результаты работы либы
-    let withAnalyzeResult = azData.map((textAndDate, i) => {
+    // добавлет в объект сообщения результаты работы az
+    let withAnalyzeResult = azData.map((textAndDate) => {
       let azResult = Az.Morph(textAndDate.text)
-      // i == 1 && console.log(Az.Morph(textAndDate.text).normalize())
       return {
         ...textAndDate,
         azResult:
@@ -81,7 +80,6 @@ app.post('/analyze', express.json(), (req, res) => {
         ? { message: 'По указанным параметрам слов не нашлось ¯\\_(ツ)_/¯' }
         : { words: withAnalyzeResult }
     )
-    console.log('————————————————')
   })
 })
 
